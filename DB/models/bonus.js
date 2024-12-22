@@ -105,4 +105,11 @@ bonusSchema.statics.getMonthlyReport = async function (month, year) {
   ]);
 };
 
+bonusSchema.statics.getPendingRequests = async function (month, year) {
+  return await this.find({
+    status: { $in: ["pending", "rejected"] },
+  });
+};
+
+
 export const Bonus = mongoose.model("Bonus", bonusSchema);
