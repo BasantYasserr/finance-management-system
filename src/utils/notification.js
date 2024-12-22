@@ -1,8 +1,8 @@
-import WebSocket from 'ws';
+import { WebSocketServer } from 'ws';  // Correct ES module import
 
 class NotificationService {
   constructor() {
-    this.wss = new WebSocket.Server({ port: 8080 });
+    this.wss = new WebSocketServer({ port: 8080 }); // Correct usage of WebSocketServer
     this.clients = new Map();
     
     this.wss.on('connection', this.handleConnection.bind(this));
