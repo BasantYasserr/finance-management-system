@@ -1,4 +1,7 @@
 import PayPal from 'paypal-rest-sdk';
+import dotenv from 'dotenv';
+dotenv.config();
+import { Bonus } from '../../DB/models/bonus.js';
 
 
 // Configure PayPal
@@ -20,43 +23,62 @@ const createPayment = (payment) => {
   
 // Process payment
 export const processPayment = async (req, res) => {
-    try {
-      const { amount, description, currency = 'USD' } = req.body;
-      
-      const payment = {
-        intent: 'authorize',
-        payer: {
-          payment_method: 'paypal'
-        },
-        redirect_urls: {
-          return_url: `${process.env.BASE_URL}/api/payments/success`,
-          cancel_url: `${process.env.BASE_URL}/api/payments/cancel`
-        },
-        transactions: [{
-          amount: {
-            total: amount,
-            currency
-          },
-          description
-        }]
-      };
-  
-      const transaction = await createPayment(payment);
-      const redirectUrl = transaction.links.find(link => link.method === 'REDIRECT')?.href;
-      
-      if (!redirectUrl) throw new Error('No redirect URL found');
-      
-      res.status(200).json({ 
-        redirectUrl,
-        paymentId: transaction.id 
-      });
-    } catch (error) {
-      res.status(400).json({ 
-        error: error.message 
-      });
+  try {
+    const { bonusRequestId, description, currency = 'USD' } = req.body;
+
+    // Retrieve the bonus request using the bonusRequestId
+    const bonusRequest = await Bonus.findById(bonusRequestId);
+    
+    // If no bonus request found, return an error
+    if (!bonusRequest) {
+      return res.status(404).json({ error: "Bonus request not found" });
     }
+
+    if(bonusRequest.status != "approved")
+      return res.status(400).json({ error: "Bonus request must be approved first" });
+
+
+    // Use the amount from the bonus request
+    const amount = bonusRequest.amount;
+
+    // Construct the payment object
+    const payment = {
+      intent: 'authorize',
+      payer: {
+        payment_method: 'paypal'
+      },
+      redirect_urls: {
+        return_url: `${process.env.BASE_URL}/api/payments/success`,
+        cancel_url: `${process.env.BASE_URL}/api/payments/cancel`
+      },
+      transactions: [{
+        amount: {
+          total: amount.toFixed(2), // Ensure the amount is formatted correctly
+          currency
+        },
+        description
+      }]
+    };
+
+    // Create the payment and get the redirect URL
+    const transaction = await createPayment(payment);
+    const redirectUrl = transaction.links.find(link => link.method === 'REDIRECT')?.href;
+
+    if (!redirectUrl) throw new Error('No redirect URL found');
+
+    // Return the redirect URL and payment ID
+    res.status(200).json({ 
+      redirectUrl,
+      paymentId: transaction.id 
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ 
+      error: error.message || "An error occurred while processing the payment" 
+    });
+  }
 };
-  
+
 // Execute payment after PayPal approval
 export const executePayment = async (req, res) => {
     try {
