@@ -8,7 +8,9 @@ import userRoutes from './src/routes/user.js'
 import reportRoutes from './src/routes/report.js'
 import paymentRoutes from './src/routes/payment.js'
 import attachmentRoutes from './src/routes/attachment.js'
-
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 
 dotenv.config();
@@ -29,6 +31,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/attachment', attachmentRoutes);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {

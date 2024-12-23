@@ -4,34 +4,54 @@ import { notificationService } from '../utils/notification.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { roleCheck } from '../middleware/roleCheck.js'
 import mongoose from 'mongoose';
+import upload from '../utils/fileStorage.js';
 
 const router = express.Router();
 
-// Create bonus request
 router.post('/',
   authMiddleware,
   roleCheck(['manager']),
+  upload.array('file', 1), // Handles file upload (max 1 file)
   async (req, res) => {
     try {
+      // Ensure the file is uploaded
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ error: 'No file uploaded.' });
+      }
+
+      // Prepare attachment data
+      const attachments = req.files.map(file => ({
+        fileName: file.originalname,
+        fileUrl: file.path, // Assuming file is saved to the server and `file.path` is the URL
+        uploadDate: new Date()
+      }));
+
+      // Prepare bonus data, including the attachments array
       const bonusData = {
         ...req.body,
-        requestedBy: req.user._id
+        requestedBy: req.user._id,
+        attachments // Add attachments to bonus data
       };
-      
+
+      // Create the bonus request
       const bonus = await Bonus.create(bonusData);
-      
+
+      // Send notification (optional, based on your existing service)
       await notificationService({
         type: 'bonus_request',
         recipientRole: 'finance_staff',
         data: bonus
       });
-      
+
+      // Return the created bonus request with attachments
       res.status(201).json(bonus);
     } catch (error) {
+      console.error('Error creating bonus request:', error);
       res.status(400).json({ error: error.message });
     }
   }
 );
+
 
 // Get monthly bonus report
 router.get('/report/monthly',
