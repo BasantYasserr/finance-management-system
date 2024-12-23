@@ -64,7 +64,12 @@ const bonusSchema = new mongoose.Schema({
 });
 
 // Define statics explicitly
-bonusSchema.statics.updateStatus = async function (bonusId, status, updatedBy, comment) {
+bonusSchema.statics.updateStatus = async function (
+  bonusId,
+  status,
+  updatedBy,
+  comment
+) {
   return await this.findByIdAndUpdate(
     bonusId,
     {
@@ -105,11 +110,16 @@ bonusSchema.statics.getMonthlyReport = async function (month, year) {
   ]);
 };
 
-bonusSchema.statics.getPendingRequests = async function (month, year) {
+bonusSchema.statics.getPendingRequests = async function (
+  month,
+  year,
+  status = null
+) {
+  if (!status) return await this.find({});
+
   return await this.find({
-    status: { $in: ["pending", "rejected"] },
+    status: status,
   });
 };
-
 
 export const Bonus = mongoose.model("Bonus", bonusSchema);

@@ -58,7 +58,7 @@ router.get('/department-summary',
 // Export report
 router.get('/export', 
   authMiddleware, 
-  roleCheck(['manager', 'finance_staff']), 
+  roleCheck(['manager', 'staff']), 
   async (req, res) => {
     try {
       const { type, startDate, endDate } = req.query;
