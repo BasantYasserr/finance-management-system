@@ -1,3 +1,5 @@
+import mongoose from 'mongoose';
+
 const permissionGroupSchema = new mongoose.Schema({
     name: {
       type: String,

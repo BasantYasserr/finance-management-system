@@ -8,8 +8,7 @@ import mongoose from 'mongoose';
 const router = express.Router();
 
 // Create bonus request
-router.post(
-  '/',
+router.post('/',
   authMiddleware,
   roleCheck(['manager']),
   async (req, res) => {
@@ -35,8 +34,7 @@ router.post(
 );
 
 // Get monthly bonus report
-router.get(
-  '/report/monthly',
+router.get('/report/monthly',
   authMiddleware,
   roleCheck(['manager', 'finance_staff']),
   async (req, res) => {
@@ -50,8 +48,7 @@ router.get(
   }
 );
 
-router.get(
-  '/monthly',
+router.get('/monthly',
   authMiddleware,
   roleCheck(['manager', 'staff']),
   async (req, res) => {
@@ -65,8 +62,7 @@ router.get(
   }
 );
 
-router.put(
-  '/:bonusId/approve-reject',
+router.put('/:bonusId/approve-reject',
   authMiddleware,
   roleCheck(['staff']), // Only staff can approve/reject
   async (req, res) => {
@@ -152,5 +148,35 @@ router.get('/:bonusId', async (req, res) => {
     res.status(500).json({ error: 'An unexpected error occurred. Please try again later.' });
   }
 });
+
+router.post('/bonus-update',
+  async (req, res) => {
+    try {
+      const { employeeId, bonusAmount, reason } = req.body;
+      
+      // Validate input
+      if (!employeeId || !bonusAmount) {
+        throw new Error('Employee ID and bonus amount are required');
+      }
+  
+      // Update bonus in database
+      const bonus = await Bonus.create({
+        employeeId,
+        amount: bonusAmount,
+        reason,
+        date: new Date()
+      });
+  
+      res.status(200).json({ 
+        status: 'success',
+        bonus 
+      });
+    } catch (error) {
+      res.status(400).json({ 
+        error: error.message 
+      });
+    }
+  }
+);
 
 export default router;
