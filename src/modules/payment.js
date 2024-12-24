@@ -41,6 +41,8 @@ export const processPayment = async (req, res) => {
     // Use the amount from the bonus request
     const amount = bonusRequest.amount;
 
+    console.log(amount.toFixed(2));
+
     // Construct the payment object
     const payment = {
       intent: 'authorize',

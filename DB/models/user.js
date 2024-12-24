@@ -57,7 +57,7 @@ const userSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['Active', 'Not Active'],
-    default: 'Not Active'
+    default: 'Active'
   },
   permissions: [{
     type: mongoose.Schema.Types.ObjectId,
